@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inventory Lite</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:1rem;max-width:1100px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
+  .row{display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}
+  input,select,button,textarea{padding:.5rem;font-size:14px}
+  table{border-collapse:collapse;width:100%;margin-top:.5rem}
+  th,td{border:1px solid #ddd;padding:.5rem;font-size:14px}
+  th{background:#f6f6f6;text-align:left}
+  .pill{border:1px solid #ccc;border-radius:999px;padding:.15rem .5rem;background:#fff}
+  .muted{opacity:.8}
+  #video{width:280px;height:auto;border:1px solid #ddd;display:none}
+  .qr{display:inline-block;padding:.25rem;border:1px dashed #aaa;margin-left:.5rem}
+</style>
+<body>
+<header>
+  <h1>Inventory Lite</h1>
+  <div class="row">
+    <span class="pill" id="mode-pill">Mode: <strong id="mode-label">Local</strong></span>
+    <button id="toggle-mode">Switch Mode</button>
+    <button id="export-csv">Export CSV</button>
+    <button id="import-json">Import JSON</button>
+    <input id="search" placeholder="Search assets...">
+  </div>
+</header>
+
+<section class="row">
+  <input id="tag" placeholder="Tag (required)">
+  <input id="type" placeholder="Type (laptop, monitor...)">
+  <input id="model" placeholder="Model">
+  <input id="serial" placeholder="Serial">
+  <input id="owner" placeholder="Owner">
+  <input id="location" placeholder="Location">
+  <select id="status">
+    <option>In Service</option>
+    <option>Spare</option>
+    <option>Retired</option>
+    <option>Repair</option>
+  </select>
+  <input id="purchase_date" type="date" placeholder="Purchase Date">
+  <input id="warranty_end" type="date" placeholder="Warranty End">
+  <input id="notes" placeholder="Notes">
+  <button id="add">Add Asset</button>
+  <span class="muted">QR for tag:</span> <span id="qr" class="qr"></span>
+</section>
+
+<section class="row">
+  <button id="scan">Scan QR</button>
+  <video id="video" playsinline></video>
+</section>
+
+<table id="grid">
+  <thead>
+    <tr>
+      <th>Tag</th><th>Type</th><th>Model</th><th>Serial</th><th>Owner</th><th>Location</th><th>Status</th><th>Warranty</th><th>Notes</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<script src="app.js"></script>
+<script>
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
+</script>
+</body>
+</html>
