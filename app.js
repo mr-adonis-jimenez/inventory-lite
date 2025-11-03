@@ -1,6 +1,6 @@
 // Inventory Lite — Browser UI (Local mode + Sheets mode)
 const API_URL = 'https://script.google.com/macros/s/AKfycbwEgw9t6PSZhIDPZQWHyK5qAEfOppecC--CHvs5Gn5xQOSH7xZH4qWfvfgUIDZmGWIn-g/exec';          // <-- paste Apps Script deployment URL
-const TOKEN   = '';   // <-- must match CONFIG.TOKEN on server
+const TOKEN   = 'api_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJpbnZlbnRvcnlfc2NvcGUiOiJhZG1pbiJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';   // <-- must match CONFIG.TOKEN on server
 
 const MODE_KEY = 'inv_mode';
 let MODE = localStorage.getItem(MODE_KEY) || 'local'; // 'local' | 'sheets'
