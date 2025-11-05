@@ -210,7 +210,7 @@ $('#scan').addEventListener('click', async ()=>{
     const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
     
     let lastScanTime = 0;
-    const scanInterval = 250; // Scan every 250ms instead of every frame
+    const scanInterval = 250; // Scan every 250ms (4fps) instead of every frame (~60fps)
     
     (function loop(){
       const now = Date.now();
