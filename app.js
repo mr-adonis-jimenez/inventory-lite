@@ -60,12 +60,26 @@ async function listRender(){
   const q = $('#search').value.trim();
   let items = [];
   if(MODE === 'local'){
-    items = getLocal().filter(a => !q || JSON.stringify(a).toLowerCase().includes(q.toLowerCase()));
+    const qLower = q.toLowerCase();
+    items = getLocal().filter(a => {
+      if(!q) return true;
+      // Search across relevant fields instead of stringifying entire object
+      return (a.tag||'').toLowerCase().includes(qLower) ||
+             (a.type||'').toLowerCase().includes(qLower) ||
+             (a.model||'').toLowerCase().includes(qLower) ||
+             (a.serial||'').toLowerCase().includes(qLower) ||
+             (a.owner||'').toLowerCase().includes(qLower) ||
+             (a.location||'').toLowerCase().includes(qLower) ||
+             (a.status||'').toLowerCase().includes(qLower) ||
+             (a.notes||'').toLowerCase().includes(qLower);
+    });
   } else {
     try { items = await apiList({query:q}); } catch(e){ alert('API error: '+e.message); }
   }
 
-  const tb = $('#grid tbody'); tb.innerHTML = '';
+  const tb = $('#grid tbody');
+  const fragment = document.createDocumentFragment();
+  
   items.forEach(a=>{
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -82,8 +96,12 @@ async function listRender(){
         <button data-act="qr" data-tag="${esc(a.tag||'')}">QR</button>
         ${MODE==='local' ? `<button data-act="del" data-id="${esc(a.id||'')}">Delete</button>` : ''}
       </td>`;
-    tb.appendChild(tr);
+    fragment.appendChild(tr);
   });
+  
+  // Clear and append all at once for better performance
+  tb.innerHTML = '';
+  tb.appendChild(fragment);
 }
 
 function collectAsset(){
@@ -129,9 +147,15 @@ function clearAddForm(){
 let qrObj;
 $('#tag').addEventListener('input', ()=>{
   const v = $('#tag').value.trim();
-  $('#qr').innerHTML='';
+  const qrContainer = $('#qr');
+  
+  // Clear existing QR code
+  qrContainer.innerHTML='';
+  if(qrObj) qrObj.clear();
+  qrObj = null;
+  
   if(!v) return;
-  qrObj = new QRCode($('#qr'), {text:v, width:96, height:96});
+  qrObj = new QRCode(qrContainer, {text:v, width:96, height:96});
 });
 
 // Delete (local only) & show QR buttons
@@ -150,7 +174,11 @@ $('#grid').addEventListener('click', (e)=>{
 });
 
 // Search
-$('#search').addEventListener('input', listRender);
+let searchTimeout;
+$('#search').addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(listRender, 300); // Debounce search by 300ms
+});
 
 // Mode toggle
 $('#toggle-mode').addEventListener('click', async ()=>{
@@ -181,8 +209,14 @@ $('#scan').addEventListener('click', async ()=>{
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }});
     video.srcObject = stream; video.style.display='block'; await video.play();
     const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+    
+    let lastScanTime = 0;
+    const scanInterval = 250; // Scan every 250ms instead of every frame
+    
     (function loop(){
-      if(video.readyState === video.HAVE_ENOUGH_DATA){
+      const now = Date.now();
+      if(video.readyState === video.HAVE_ENOUGH_DATA && now - lastScanTime >= scanInterval){
+        lastScanTime = now;
         canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
