@@ -1,78 +1,163 @@
 <!doctype html>
-<html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Inventory Lite</title>
-<link rel="manifest" href="manifest.webmanifest">
-<style>
-  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:1rem;max-width:1100px}
-  header{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}
-  .row{display:flex;gap:.5rem;flex-wrap:wrap;margin:.5rem 0}
-  input,select,button,textarea{padding:.5rem;font-size:14px}
-  table{border-collapse:collapse;width:100%;margin-top:.5rem}
-  th,td{border:1px solid #ddd;padding:.5rem;font-size:14px}
-  th{background:#f6f6f6;text-align:left}
-  .pill{border:1px solid #ccc;border-radius:999px;padding:.15rem .5rem;background:#fff}
-  .muted{opacity:.8}
-  #video{width:280px;height:auto;border:1px solid #ddd;display:none}
-  .qr{display:inline-block;padding:.25rem;border:1px dashed #aaa;margin-left:.5rem}
-</style>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <title>Inventory Lite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
 <body>
-<header>
-  <h1>Inventory Lite</h1>
-  <div class="row">
-    <span class="pill" id="mode-pill">Mode: <strong id="mode-label">Local</strong></span>
-    <button id="toggle-mode">Switch Mode</button>
-    <button id="export-csv">Export CSV</button>
-    <button id="import-json">Import JSON</button>
-    <input id="search" placeholder="Search assets...">
-  </div>
-</header>
-<!doctype html>
-<title>It works</title>
-<h1>GitHub Pages is live</h1>
-<p>If you can read this, publishing is fine.</p>
+  <header class="app-header">
+    <h1>Inventory Lite</h1>
+    <div class="actions">
+      <button id="addBtn" title="Add (a)">Add Item</button>
+      <label for="importCsv" class="btn-like" title="Import CSV">Import CSV</label>
+      <input id="importCsv" type="file" accept=".csv,text/csv" hidden>
+      <button id="exportBtn" title="Export CSV (e)">Export CSV</button>
+      <button id="exportJsonBtn" title="Export JSON">Export JSON</button>
+      <label for="importJson" class="btn-like" title="Import JSON">Import JSON</label>
+      <input id="importJson" type="file" accept="application/json,.json" hidden>
+      <button id="seedBtn" class="secondary">Add Sample Data</button>
+      <button id="settingsBtn" class="secondary">Settings</button>
+      <button id="clearBtn" class="danger">Clear All</button>
+    </div>
+  </header>
 
-<section class="row">
-  <input id="tag" placeholder="Tag (required)">
-  <input id="type" placeholder="Type (laptop, monitor...)">
-  <input id="model" placeholder="Model">
-  <input id="serial" placeholder="Serial">
-  <input id="owner" placeholder="Owner">
-  <input id="location" placeholder="Location">
-  <select id="status">
-    <option>In Service</option>
-    <option>Spare</option>
-    <option>Retired</option>
-    <option>Repair</option>
-  </select>
-  <input id="purchase_date" type="date" placeholder="Purchase Date">
-  <input id="warranty_end" type="date" placeholder="Warranty End">
-  <input id="notes" placeholder="Notes">
-  <button id="add">Add Asset</button>
-  <span class="muted">QR for tag:</span> <span id="qr" class="qr"></span>
-</section>
+  <section class="filters">
+    <input id="searchInput" placeholder="Search name or SKU (/)">
+    <select id="locationFilter" aria-label="Location filter">
+      <option value="">All locations</option>
+    </select>
+    <select id="sortSelect" aria-label="Sort">
+      <option value="updatedAt_desc">Recently updated</option>
+      <option value="name_asc">Name A→Z</option>
+      <option value="name_desc">Name Z→A</option>
+      <option value="qty_desc">Qty high→low</option>
+      <option value="qty_asc">Qty low→high</option>
+      <option value="cost_desc">Cost high→low</option>
+      <option value="cost_asc">Cost low→high</option>
+    </select>
+    <label class="low-stock-toggle"><input type="checkbox" id="lowStockOnly"> Low-stock only</label>
+  </section>
 
-<section class="row">
-  <button id="scan">Scan QR</button>
-  <video id="video" playsinline></video>
-</section>
+  <section class="summary" aria-live="polite">
+    <div><strong id="sumItems">0</strong><span>Items</span></div>
+    <div><strong id="sumQty">0</strong><span>Total Qty</span></div>
+    <div><strong id="sumValue">$0.00</strong><span>Total Value</span></div>
+    <div><strong id="sumLocs">0</strong><span>Locations</span></div>
+  </section>
 
-<table id="grid">
-  <thead>
-    <tr>
-      <th>Tag</th><th>Type</th><th>Model</th><th>Serial</th><th>Owner</th><th>Location</th><th>Status</th><th>Warranty</th><th>Notes</th><th>Actions</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  <main>
+    <div id="banner" class="banner hidden"></div>
+    <table class="grid" aria-label="Inventory table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>SKU</th>
+          <th class="num">Qty</th>
+          <th class="num">Cost</th>
+          <th>Location</th>
+          <th>Updated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p id="emptyState" class="muted hidden">No items yet. Add your first one.</p>
+  </main>
 
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-<script src="app.js"></script>
-<script>
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); 
-                                  }
-</script>
+  <dialog id="itemDialog" aria-labelledby="dialogTitle">
+    <form method="dialog" id="itemForm">
+      <h3 id="dialogTitle">Add Item</h3>
+      <input type="hidden" id="itemId">
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" required maxlength="120">
+      </div>
+      <div class="field grid-inline">
+        <div class="grow">
+          <label for="sku">SKU</label>
+          <input id="sku" maxlength="80" placeholder="Optional">
+        </div>
+        <button id="scanBtn" type="button" class="secondary small" title="Scan barcode">Scan</button>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="qty">Qty</label>
+          <input id="qty" type="number" min="0" step="1" required>
+        </div>
+        <div class="field">
+          <label for="cost">Cost</label>
+          <input id="cost" type="number" min="0" step="0.01" value="0">
+        </div>
+      </div>
+      <div class="field">
+        <label for="location">Location</label>
+        <input id="location" maxlength="80" placeholder="e.g., Aisle 3">
+      </div>
+      <menu>
+        <button value="cancel" class="secondary">Cancel</button>
+        <button id="saveBtn" value="default">Save</button>
+      </menu>
+      <p id="formError" class="error"></p>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+    <form method="dialog" id="settingsForm">
+      <h3 id="settingsTitle">Settings</h3>
+      <div class="field-grid">
+        <div class="field">
+          <label for="threshold">Low-stock threshold</label>
+          <input id="threshold" type="number" min="0" step="1" value="5">
+        </div>
+        <div class="field">
+          <label for="currency">Currency symbol</label>
+          <input id="currency" maxlength="3" value="$">
+        </div>
+      </div>
+      <div class="field">
+        <label>Theme</label>
+        <select id="theme">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="system">System</option>
+        </select>
+      </div>
+      <menu>
+        <button value="cancel" class="secondary">Close</button>
+        <button id="saveSettings" value="default">Save</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { DB } from './src/db.js';
+    import { initUI } from './src/ui.js';
+    import { initApp } from './src/app.js';
+
+    const db = await DB.open();
+    const settings = await db.loadSettings();
+    initUI(db, settings);
+    initApp(db, settings);
+
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        nw?.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            const toast = document.getElementById('toast');
+            toast.textContent = 'Update available – reload to apply';
+            toast.classList.add('show');
+          }
+        });
+      });
+    }
+  </script>
 </body>
 </html>
