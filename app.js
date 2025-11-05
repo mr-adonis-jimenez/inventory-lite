@@ -151,7 +151,6 @@ $('#tag').addEventListener('input', ()=>{
   
   // Clear existing QR code
   qrContainer.innerHTML='';
-  if(qrObj) qrObj.clear();
   qrObj = null;
   
   if(!v) return;
