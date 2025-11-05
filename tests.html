@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Inventory Lite – Tests</title>
+<style>
+body{font:14px/1.4 system-ui;margin:24px} .ok{color:#15803d} .fail{color:#b91c1c}
+</style>
+<h1>Inventory Lite – Smoke Tests</h1>
+<pre id="out"></pre>
+<script type="module">
+  import { initApp } from './src/app.js';
+  import { DB } from './src/db.js';
+  import './src/ui.js'; // for side-effects only in this test
+
+  const out = document.getElementById('out');
+  const log = (ok, msg) => out.insertAdjacentHTML('beforeend', (ok? '✅ ' : '❌ ') + msg + '\n');
+
+  // Basic CSV parser test via app internals (quick import of functions)
+  const m = await import('./src/app.js');
+  const csv = "id,name,sku,qty,cost,location,updatedAt\n,Pen,PEN,2,0.5,Desk,";
+  const arr = m.__test?.parseCSV ? m.__test.parseCSV(csv) : (m.parseCSV ? m.parseCSV(csv) : []);
+  log(arr.length === 1 && arr[0].name === 'Pen', 'CSV parse yields one row named Pen');
+
+  // IDB availability
+  const db = await DB.open();
+  log(!!db, 'DB opened');
+  await db.upsert({ id:'t1', name:'X', qty:1, cost:1, updatedAt:new Date().toISOString() });
+  const all = await db.all();
+  log(all.length >= 1, 'DB upsert/all round-trip');
+
+  // stats
+  const s = await db.stats();
+  log(typeof s.qty === 'number' && typeof s.value === 'number', 'Stats calculated');
+
+  // UI bus
+  log(!!window.__ui, 'UI bus exposed');
+
+  // Done
+  log(true, 'Smoke tests complete');
+</script>
