@@ -1,0 +1,19 @@
+{
+  "env": { "browser": true, "es2021": true },
+  "extends": [
+    "eslint:recommended",
+    "plugin:import/recommended",
+    "plugin:n/recommended",
+    "plugin:promise/recommended"
+  ],
+  "parserOptions": { "ecmaVersion": 2022, "sourceType": "module" },
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-constant-binary-expression": "error",
+    "no-implicit-coercion": ["warn", { "boolean": true, "number": true, "string": true }],
+    "import/no-unresolved": "off",
+    "n/no-unsupported-features/es-builtins": "off",
+    "n/no-missing-import": "off"
+  },
+  "ignorePatterns": ["node_modules/", "assets/", "dist/"]
+}
