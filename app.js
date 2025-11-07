@@ -133,11 +133,34 @@ export function initApp(db, initialSettings) {
   let settings = Object.assign({ lowStockThreshold: 5, currency: '$', theme: 'dark', lastLocation:'' }, initialSettings || {});
   ui.applyTheme(settings.theme);
 
+copilot/improve-slow-code-performance
+// ------ UI logic ------
+async function listRender(){
+  const q = $('#search').value.trim();
+  let items = [];
+  if(MODE === 'local'){
+    const qLower = q.toLowerCase();
+    items = getLocal().filter(a => {
+      if(!q) return true;
+      // Search across relevant fields instead of stringifying entire object
+      return (a.tag||'').toLowerCase().includes(qLower) ||
+             (a.type||'').toLowerCase().includes(qLower) ||
+             (a.model||'').toLowerCase().includes(qLower) ||
+             (a.serial||'').toLowerCase().includes(qLower) ||
+             (a.owner||'').toLowerCase().includes(qLower) ||
+             (a.location||'').toLowerCase().includes(qLower) ||
+             (a.status||'').toLowerCase().includes(qLower) ||
+             (a.notes||'').toLowerCase().includes(qLower);
+    });
+  } else {
+    try { items = await apiList({query:q}); } catch(e){ alert('API error: '+e.message); }
+
   async function refresh() {
     allItems = await db.all();
     paint();
     fillLocationFilter(allItems);
     updateSummary();
+ main
   }
   function fillLocationFilter(items) {
     const sel = ui.locationFilter;
@@ -190,6 +213,34 @@ export function initApp(db, initialSettings) {
   // Events
   ui.addBtn.addEventListener('click', () => { fillForm(null); ui.dialog.showModal(); });
 
+copilot/improve-slow-code-performance
+  const tb = $('#grid tbody');
+  const fragment = document.createDocumentFragment();
+  
+  items.forEach(a=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${esc(a.tag||'')}</td>
+      <td>${esc(a.type||'')}</td>
+      <td>${esc(a.model||'')}</td>
+      <td>${esc(a.serial||'')}</td>
+      <td>${esc(a.owner||'')}</td>
+      <td>${esc(a.location||'')}</td>
+      <td>${esc(a.status||'')}</td>
+      <td>${esc(a.warranty_end||'')}</td>
+      <td>${esc(a.notes||'')}</td>
+      <td>
+        <button data-act="qr" data-tag="${esc(a.tag||'')}">QR</button>
+        ${MODE==='local' ? `<button data-act="del" data-id="${esc(a.id||'')}">Delete</button>` : ''}
+      </td>`;
+    fragment.appendChild(tr);
+  });
+  
+  // Clear and append all at once for better performance
+  tb.innerHTML = '';
+  tb.appendChild(fragment);
+}
+
   ui.rows.addEventListener('click', async (e) => {
     const id = e.target.dataset.edit || e.target.dataset.del;
     if (!id) return;
@@ -205,6 +256,7 @@ export function initApp(db, initialSettings) {
       refresh();
     }
   });
+main
 
   ui.saveBtn.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -260,6 +312,81 @@ export function initApp(db, initialSettings) {
       e.target.value = '';
     }
   });
+
+copilot/improve-slow-code-performance
+// QR for tag as-you-type
+let qrObj;
+$('#tag').addEventListener('input', ()=>{
+  const v = $('#tag').value.trim();
+  const qrContainer = $('#qr');
+  
+  // Clear existing QR code
+  qrContainer.innerHTML='';
+  qrObj = null;
+  
+  if(!v) return;
+  qrObj = new QRCode(qrContainer, {text:v, width:96, height:96});
+});
+
+// Delete (local only) & show QR buttons
+$('#grid').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  const act = btn.getAttribute('data-act');
+  if(act === 'del' && MODE==='local'){
+    const id = btn.getAttribute('data-id');
+    const arr = getLocal().filter(a => a.id !== id);
+    setLocal(arr); listRender();
+  }
+  if(act === 'qr'){
+    const tag = btn.getAttribute('data-tag');
+    if(tag){ $('#tag').value = tag; $('#tag').dispatchEvent(new Event('input')); window.scrollTo({top:0, behavior:'smooth'}); }
+  }
+});
+
+// Search
+let searchTimeout;
+$('#search').addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(listRender, 300); // Debounce search by 300ms
+});
+
+// Mode toggle
+$('#toggle-mode').addEventListener('click', async ()=>{
+  setMode(MODE === 'local' ? 'sheets' : 'local');
+  await listRender();
+});
+
+// Import/Export
+$('#export-csv').addEventListener('click', ()=>{
+  const items = MODE==='local' ? getLocal() : []; // export local set
+  const csv = toCSV(items, headers);
+  download('assets.csv', csv, 'text/csv');
+});
+$('#import-json').addEventListener('click', async ()=>{
+  const text = prompt('Paste JSON array of assets'); if(!text) return;
+  try {
+    const arr = JSON.parse(text);
+    if(!Array.isArray(arr)) throw new Error('Not an array');
+    if(MODE==='local'){ setLocal(arr); await listRender(); }
+    else alert('Import only supported in Local mode for demo');
+  }catch(e){ alert('Import failed: '+e.message); }
+});
+
+// QR Scan
+$('#scan').addEventListener('click', async ()=>{
+  const video = $('#video');
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' }});
+    video.srcObject = stream; video.style.display='block'; await video.play();
+    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+    
+    let lastScanTime = 0;
+    const scanInterval = 250; // Scan every 250ms (4fps) instead of every frame (~60fps)
+    
+    (function loop(){
+      const now = Date.now();
+      if(video.readyState === video.HAVE_ENOUGH_DATA && now - lastScanTime >= scanInterval){
+        lastScanTime = now;
 
   ui.importJson.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
@@ -327,6 +454,7 @@ export function initApp(db, initialSettings) {
       let tries = 0;
       const tick = async () => {
         if (video.videoWidth === 0 || video.videoHeight === 0) { if (++tries<30) return requestAnimationFrame(tick); }
+main
         canvas.width = video.videoWidth; canvas.height = video.videoHeight;
         ctx.drawImage(video,0,0); const bitmap = await createImageBitmap(canvas);
         const codes = await detector.detect(bitmap);

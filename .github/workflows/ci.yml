@@ -17,7 +17,7 @@ jobs:
       - name: ESLint
         run: npm run lint
       - name: Validate HTML
-        uses: Cyb3r-Jak3/html5validator-action@v6
+      - uses: cyb3r-jak3/html5validator-action@v2
         with:
           root: .
           blacklist: node_modules
