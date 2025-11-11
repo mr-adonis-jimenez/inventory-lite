@@ -1,16 +1,14 @@
 {
   "name": "inventory-lite",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "lint": "eslint .",
+    "build": "node my-build-script.js" 
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "react": "^19.2.0"
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0"
   }
 }
