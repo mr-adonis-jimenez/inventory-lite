@@ -1,163 +1,186 @@
-<!doctype html>
-<html lang="en" data-theme="dark">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>Inventory Lite</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0f172a" />
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="assets/styles.css">
+  <!-- QR scanning library -->
+  <script src="https://unpkg.com/html5-qrcode" defer></script>
+  <script src="assets/app.js" defer></script>
 </head>
 <body>
-  <header class="app-header">
-    <h1>Inventory Lite</h1>
-    <div class="actions">
-      <button id="addBtn" title="Add (a)">Add Item</button>
-      <label for="importCsv" class="btn-like" title="Import CSV">Import CSV</label>
-      <input id="importCsv" type="file" accept=".csv,text/csv" hidden>
-      <button id="exportBtn" title="Export CSV (e)">Export CSV</button>
-      <button id="exportJsonBtn" title="Export JSON">Export JSON</button>
-      <label for="importJson" class="btn-like" title="Import JSON">Import JSON</label>
-      <input id="importJson" type="file" accept="application/json,.json" hidden>
-      <button id="seedBtn" class="secondary">Add Sample Data</button>
-      <button id="settingsBtn" class="secondary">Settings</button>
-      <button id="clearBtn" class="danger">Clear All</button>
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <h1>Inventory Lite</h1>
+      <span class="mode-label">Mode:</span>
+      <select id="mode-select">
+        <option value="local">Local (Browser)</option>
+        <option value="sheets" disabled>Sheets (API – to be wired)</option>
+      </select>
+    </div>
+    <div class="top-bar-right">
+      <button id="export-csv-btn" type="button">Export CSV</button>
+      <button id="import-json-btn" type="button">Import JSON</button>
     </div>
   </header>
 
-  <section class="filters">
-    <input id="searchInput" placeholder="Search name or SKU (/)">
-    <select id="locationFilter" aria-label="Location filter">
-      <option value="">All locations</option>
-    </select>
-    <select id="sortSelect" aria-label="Sort">
-      <option value="updatedAt_desc">Recently updated</option>
-      <option value="name_asc">Name A→Z</option>
-      <option value="name_desc">Name Z→A</option>
-      <option value="qty_desc">Qty high→low</option>
-      <option value="qty_asc">Qty low→high</option>
-      <option value="cost_desc">Cost high→low</option>
-      <option value="cost_asc">Cost low→high</option>
-    </select>
-    <label class="low-stock-toggle"><input type="checkbox" id="lowStockOnly"> Low-stock only</label>
-  </section>
+  <main class="layout">
+    <section class="panel panel-form">
+      <div class="panel-header">
+        <h2>Add / Edit Asset</h2>
+        <span class="env-status">GitHub Pages is live</span>
+      </div>
 
-  <section class="summary" aria-live="polite">
-    <div><strong id="sumItems">0</strong><span>Items</span></div>
-    <div><strong id="sumQty">0</strong><span>Total Qty</span></div>
-    <div><strong id="sumValue">$0.00</strong><span>Total Value</span></div>
-    <div><strong id="sumLocs">0</strong><span>Locations</span></div>
-  </section>
+      <form id="asset-form" autocomplete="off">
+        <input type="hidden" id="editing-index" value="">
 
-  <main>
-    <div id="banner" class="banner hidden"></div>
-    <table class="grid" aria-label="Inventory table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>SKU</th>
-          <th class="num">Qty</th>
-          <th class="num">Cost</th>
-          <th>Location</th>
-          <th>Updated</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <p id="emptyState" class="muted hidden">No items yet. Add your first one.</p>
+        <div class="form-row">
+          <label for="tag">Tag <span class="required">*</span></label>
+          <div class="tag-row">
+            <input id="tag" name="tag" required placeholder="e.g. LAP-001">
+            <button id="qr-for-tag-btn" type="button">QR for tag</button>
+            <button id="scan-qr-btn" type="button">Scan QR</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="type">Type</label>
+          <input id="type" name="type" placeholder="laptop, monitor, dock...">
+        </div>
+
+        <div class="form-row">
+          <label for="model">Model</label>
+          <input id="model" name="model" placeholder="e.g. Dell XPS 13">
+        </div>
+
+        <div class="form-row">
+          <label for="serial">Serial</label>
+          <input id="serial" name="serial" placeholder="Serial number">
+        </div>
+
+        <div class="form-row">
+          <label for="owner">Owner</label>
+          <input id="owner" name="owner" placeholder="Person or team">
+        </div>
+
+        <div class="form-row">
+          <label for="location">Location</label>
+          <input id="location" name="location" placeholder="Office, room, rack...">
+        </div>
+
+        <div class="form-row">
+          <label for="in-service-date">In service</label>
+          <input id="in-service-date" name="inServiceDate" type="date">
+        </div>
+
+        <div class="form-row">
+          <label for="retired-date">Retired</label>
+          <input id="retired-date" name="retiredDate" type="date">
+        </div>
+
+        <div class="form-row">
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes" rows="2"
+            placeholder="Asset condition, warranty, accessories, etc."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="save-asset-btn">Save asset</button>
+          <button type="button" id="reset-form-btn" class="secondary">Reset</button>
+        </div>
+
+        <p class="small-text">
+          Tags must be unique. Saving with an existing tag will update that asset.
+        </p>
+      </form>
+    </section>
+
+    <section class="panel panel-table">
+      <div class="panel-header">
+        <h2>Assets</h2>
+        <div class="filters">
+          <input id="search-input" placeholder="Search assets... (tag, owner, model, location)">
+          <label class="inline">
+            <input type="checkbox" id="active-only-checkbox" checked>
+            Active only
+          </label>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tag</th>
+              <th>Type</th>
+              <th>Model</th>
+              <th>Serial</th>
+              <th>Owner</th>
+              <th>Location</th>
+              <th>In service</th>
+              <th>Retired</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="asset-table-body">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="panel-footer">
+        <div id="summary-bar" class="summary-bar">
+          <!-- summary stats populated by JS -->
+        </div>
+      </footer>
+    </section>
   </main>
 
-  <dialog id="itemDialog" aria-labelledby="dialogTitle">
-    <form method="dialog" id="itemForm">
-      <h3 id="dialogTitle">Add Item</h3>
-      <input type="hidden" id="itemId">
-      <div class="field">
-        <label for="name">Name</label>
-        <input id="name" required maxlength="120">
+  <!-- Import JSON modal -->
+  <div id="import-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Import assets from JSON</h3>
+      <p class="small-text">
+        Expected format: an array of objects with keys:
+        tag, type, model, serial, owner, location, inServiceDate, retiredDate, notes.
+      </p>
+      <input type="file" id="json-file-input" accept="application/json">
+      <div class="modal-actions">
+        <button type="button" id="import-confirm-btn">Import</button>
+        <button type="button" id="import-cancel-btn" class="secondary">Cancel</button>
       </div>
-      <div class="field grid-inline">
-        <div class="grow">
-          <label for="sku">SKU</label>
-          <input id="sku" maxlength="80" placeholder="Optional">
-        </div>
-        <button id="scanBtn" type="button" class="secondary small" title="Scan barcode">Scan</button>
-      </div>
-      <div class="field-grid">
-        <div class="field">
-          <label for="qty">Qty</label>
-          <input id="qty" type="number" min="0" step="1" required>
-        </div>
-        <div class="field">
-          <label for="cost">Cost</label>
-          <input id="cost" type="number" min="0" step="0.01" value="0">
-        </div>
-      </div>
-      <div class="field">
-        <label for="location">Location</label>
-        <input id="location" maxlength="80" placeholder="e.g., Aisle 3">
-      </div>
-      <menu>
-        <button value="cancel" class="secondary">Cancel</button>
-        <button id="saveBtn" value="default">Save</button>
-      </menu>
-      <p id="formError" class="error"></p>
-    </form>
-  </dialog>
+      <div id="import-status" class="small-text"></div>
+    </div>
+  </div>
 
-  <dialog id="settingsDialog" aria-labelledby="settingsTitle">
-    <form method="dialog" id="settingsForm">
-      <h3 id="settingsTitle">Settings</h3>
-      <div class="field-grid">
-        <div class="field">
-          <label for="threshold">Low-stock threshold</label>
-          <input id="threshold" type="number" min="0" step="1" value="5">
-        </div>
-        <div class="field">
-          <label for="currency">Currency symbol</label>
-          <input id="currency" maxlength="3" value="$">
-        </div>
+  <!-- QR for tag modal -->
+  <div id="qr-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>QR code for tag</h3>
+      <p id="qr-tag-label" class="small-text"></p>
+      <div class="qr-container">
+        <img id="qr-image" alt="QR code for tag">
       </div>
-      <div class="field">
-        <label>Theme</label>
-        <select id="theme">
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
-          <option value="system">System</option>
-        </select>
+      <div class="modal-actions">
+        <button type="button" id="qr-close-btn">Close</button>
       </div>
-      <menu>
-        <button value="cancel" class="secondary">Close</button>
-        <button id="saveSettings" value="default">Save</button>
-      </menu>
-    </form>
-  </dialog>
+    </div>
+  </div>
 
-  <div id="toast" class="toast"></div>
-
-  <script type="module">
-    import { DB } from './src/db.js';
-    import { initUI } from './src/ui.js';
-    import { initApp } from './src/app.js';
-
-    const db = await DB.open();
-    const settings = await db.loadSettings();
-    initUI(db, settings);
-    initApp(db, settings);
-
-    if ('serviceWorker' in navigator) {
-      const reg = await navigator.serviceWorker.register('./sw.js');
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        nw?.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            const toast = document.getElementById('toast');
-            toast.textContent = 'Update available – reload to apply';
-            toast.classList.add('show');
-          }
-        });
-      });
-    }
-  </script>
+  <!-- QR scanner modal -->
+  <div id="qr-scan-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Scan QR</h3>
+      <div id="qr-reader" class="qr-reader"></div>
+      <p class="small-text">Decoded tags will populate the Tag field.</p>
+      <div class="modal-actions">
+        <button type="button" id="qr-scan-close-btn">Close</button>
+      </div>
+      <div id="qr-scan-status" class="small-text"></div>
+    </div>
+  </div>
 </body>
 </html>
+
