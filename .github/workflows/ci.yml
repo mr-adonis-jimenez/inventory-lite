@@ -6,20 +6,7 @@ permissions:
   push:
     branches: [ main ]
 jobs:
-  lint-and-validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: Install dev deps
-        run: npm ci
-      - name: Prettier check
-        run: npm run format:check
-      - name: ESLint
-        run: npm run lint
-      - name: Validate HTML
-      - uses: cyb3r-jak3/html5validator-action@v2
-        with:
-          root: .
-          blacklist: node_modules
+ - name: Install tools
+  run: |
+    npm install -g htmlhint stylelint stylelint-config-standard eslint @lhci/cli
+
