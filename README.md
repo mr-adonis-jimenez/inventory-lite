@@ -1,8 +1,8 @@
-# Inventory Lite
+# Local Vault
 Offline-first, static web app for lightweight inventory tracking. IndexedDB storage, CSV/JSON import/export, PWA.
 
-[![CI](https://github.com/USER/REPO/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
-[![Deploy](https://github.com/USER/REPO/actions/workflows/pages.yml/badge.svg)](../../actions/workflows/pages.yml)
+[![CI](https://github.com/mr-adonis-jimenez/local-vault/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+[![Deploy](https://github.com/mr-adonis-jimenez/local-vault/actions/workflows/pages.yml/badge.svg)](../../actions/workflows/pages.yml)
 
 ## Scripts
 ```bash
