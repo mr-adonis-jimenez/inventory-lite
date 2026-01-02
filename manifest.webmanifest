@@ -1,7 +1,0 @@
-{
-  "name": "Inventory Lite",
-  "short_name": "Inventory",
-  "start_url": "./",
-  "display": "standalone",
-  "icons": []
-}
