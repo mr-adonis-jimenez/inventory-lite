@@ -1,0 +1,13 @@
+body {
+  font-family: system-ui, sans-serif;
+  padding: 2rem;
+  max-width: 600px;
+}
+
+form input {
+  margin-right: 0.5rem;
+}
+
+button {
+  cursor: pointer;
+}
