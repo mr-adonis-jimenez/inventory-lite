@@ -1,3 +1,0 @@
-- name: Install linters
-  run: |
-    npm install -g stylelint stylelint-config-standard
