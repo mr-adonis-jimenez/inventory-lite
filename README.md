@@ -35,7 +35,36 @@ Local Vault flips the model:
 - No vendor lock-in
 - No surprise outages
 
+## Advanced Modes
+
+### Encrypted Vault Mode
+- AES-256-GCM encryption
+- Password-derived keys
+- Zero plaintext persistence
+- Data unrecoverable without password (by design)
+
+### IndexedDB Storage
+- Handles large inventories
+- Async, indexed access
+- No browser quota surprises
+
+### Desktop Application
+- Electron-powered
+- Cross-platform (Windows / macOS / Linux)
+- Fully offline
+- Local-only data
+
 ---
+
+## Security Model
+
+- Client-side encryption only
+- No key storage
+- No telemetry
+- No cloud sync unless explicitly added
+
+If your threat model includes forgotten passwords, this tool is not for you.
+
 
 ## Architecture
 
